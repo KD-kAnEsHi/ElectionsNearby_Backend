@@ -4,6 +4,9 @@
   "description": "A website where users can go to find out what government positions are up for election in their communities, and get more information about the political environment In their area",
   "main": "index.js",
   "scripts": {
+    "start": "NODE_ENV=production node server.js",
+    "dev": "NODE_ENV=development nodemon server.js",
+    "test": "NODE_ENV=test jest",
     "devStart": "nodemon server.js"
   },
   "keywords": [],
@@ -13,11 +16,14 @@
     "bcryptjs": "^2.4.3",
     "body-parser": "^1.20.2",
     "cors": "^2.8.5",
+    "crypto": "^1.0.1",
     "dotenv": "^16.4.5",
     "ejs": "^3.1.10",
     "express": "^4.19.2",
     "jsonwebtoken": "^9.0.2",
-    "mongoose": "^8.4.3"
+    "mongoose": "^8.4.3",
+    "ngrok": "^5.0.0-beta.2",
+    "nodemailer": "^6.9.14"
   },
   "devDependencies": {
     "nodemon": "^3.1.3"
