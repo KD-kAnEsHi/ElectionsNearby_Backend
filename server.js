@@ -266,7 +266,6 @@ const bodyParser = require('body-parser');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const User = require('./models/User');
-const ngrok = require('ngrok');
 const crypto = require('crypto');
 const emailService = require('./services/emailService');
 
@@ -279,20 +278,15 @@ function logMessage(message) {
 const app = express();
 const PORT = process.env.PORT || 3000;
 const JWT_SECRET = process.env.JWT_SECRET;
-const NGROK_URL = process.env.NGROK_URL;
 
 if (!JWT_SECRET) {
   logMessage('JWT_SECRET is not set. Please set it in your environment variables.');
   process.exit(1);
 }
-if (!NGROK_URL) {
-  logMessage('NGROK_URL is not set. Please set it in your environment variables.');
-  process.exit(1);
-}
 
 const cors = require('cors');
 app.use(cors({
-  origin: [process.env.FRONTEND_URL, process.env.NGROK_URL],
+  origin: process.env.FRONTEND_URL,
   credentials: true,
 }));
 
@@ -380,8 +374,8 @@ app.post('/api/login', async (req, res) => {
         user.resetPasswordExpires = Date.now() + 3600000;
         await user.save();
 
-        const resetLink = `${process.env.NGROK_URL}/reset-password/${token}`;
-        await emailService.sendPasswordResetEmail(user.email, resetLink);
+        const resetPath = `/reset-password/${token}`;
+        await emailService.sendPasswordResetEmail(user.email, resetPath);
 
         logMessage(`Login failed: Account for '${username}' locked due to too many attempts`);
         return res.status(403).json({ message: 'Too many failed attempts. A password reset email has been sent.' });
@@ -429,8 +423,8 @@ app.post('/api/forgot-password', async (req, res) => {
     await user.save();
     logMessage(`Reset token generated for user with email '${email}'`);
 
-    const resetLink = `/reset-password/${token}`;
-    await emailService.sendPasswordResetEmail(user.email, resetLink);
+    const resetPath = `/reset-password/${token}`;
+    await emailService.sendPasswordResetEmail(user.email, resetPath);
 
     logMessage(`Password reset email sent to '${email}'`);
     res.json({ message: 'Password reset email sent' });
@@ -489,21 +483,6 @@ app.use((err, req, res, next) => {
 });
 
 // Start the server
-app.listen(PORT, async () => {
+app.listen(PORT, () => {
   logMessage(`Server running on port ${PORT}`);
-
-  if (process.env.NODE_ENV === 'development') {
-    try {
-      const ngrokUrl = await ngrok.connect({
-        addr: PORT,
-        authtoken: process.env.NGROK_AUTHTOKEN
-      });
-      logMessage(`ngrok tunnel created: ${ngrokUrl}`);
-      process.env.NGROK_URL = ngrokUrl;
-    } catch (err) {
-      logMessage(`Error creating ngrok tunnel: ${err}`);
-      logMessage('Server is still running locally without ngrok.');
-    }
-  }
 });
-
